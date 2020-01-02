@@ -9,3 +9,4 @@ It's probably a bad idea to use many of these at once, as the effect of them try
 
 Inspired by https://community.tado.com/en-gb/discussion/2800/trvs-horribly-inaccurate-any-suggestions?
 
+Potentially even more buggy that Jon's version, but working. :s
