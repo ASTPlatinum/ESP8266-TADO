@@ -40,6 +40,9 @@ String thome = "00000"; // your_home_number"
 String tzone = "1"; // zone_id
 String tdevice = "VA1234567890"; //device ID to offset
 
+float marginoffset = 0.5; // In degrees C -  Allow margin of error with offset, this is negative & positive of the temp so 0.5 = 1C either way.
+int waitTime = 30; // Time to delay for next update in minutes.
+
 // End of credential / user setup block
 //##################################################################################################################
 
@@ -465,98 +468,115 @@ toffset = actTemp - (sensorDataPoints_insideTemperature_celsius - txoffset);
   //Serial.println("toffsetS: ");
   Serial.println(toffsetS);
 //###################################################################################################################
-// PUT Offset to Tado
+  
+  // Check Offset against margin, if less than, do nothing.
+  float cOffset = fabsf(txoffset);
+  float sOffset = fabsf(toffset);
 
-  Serial.println(host2);
-  Serial.printf("Using fingerprint '%s'\n", fingerprint2);
-  httpsClient.setFingerprint(fingerprint2);
-  httpsClient.setTimeout(15000); // 15 Seconds
-  delay(1000);
+  float calc1 = fabsf(cOffset-sOffset);
+  float calc2 = fabsf(sOffset-cOffset);
+  float toffset2 = fabsf(toffset);
+  Serial.println(calc1);
+  Serial.println(calc2);
+  Serial.println(toffset2);
+  if (calc1 <= marginoffset || calc2 <= marginoffset) {
+    Serial.println("Lets not update as the calculated offset is within our margin offset set as: " + String(marginoffset));
+  } else {
 
-  Serial.print("HTTPS Connecting");
-  int rrr = 0; //retry counter
-  while ((!httpsClient.connect(host2, httpsPort)) && (rrr < 30))
-  {
-    delay(100);
-    Serial.print(".");
-    rrr++;
-  }
-  if (rrr == 30)
-  {
-    Serial.println("Connection failed");
-  }
-  else
-  {
-    Serial.println("Connected to web");
-  }
+    // PUT Offset to Tado
 
-  Serial.print("requesting URL: ");
-  Serial.println(host2);
+    Serial.println(host2);
+    Serial.printf("Using fingerprint '%s'\n", fingerprint2);
+    httpsClient.setFingerprint(fingerprint2);
+    httpsClient.setTimeout(15000); // 15 Seconds
+    delay(1000);
 
-  String httpBody3 =  (String("{\r\n") +
-                        "            celsius: "  + toffsetS
-                        + "\r\n" +
-                        "}"
-  );
-  int httpBodyLength3 = httpBody3.length();
-
-  // Serial.print("httpBody3 Length: ");
-  // Serial.println(httpBodyLength3);
-
-String httpText3 = (String("PUT /api/v2/devices/" + tdevice + "/temperatureOffset HTTP/1.1") + "\r\n" +
-                     "Host: my.tado.com" + "\r\n" +
-                     "Authorization: Bearer " + Ttoken + "\r\n" +
-                     "Accept: */*" + "\r\n" +
-                     "Cache-Control: no-cache" + "\r\n" +
-                     "Host: my.tado.com" + "\r\n" +
-                     "Content-Length: " + httpBodyLength3 + "\r\n" +
-                     "Connection: keep-alive\r\n\r\n" +
-                    httpBody3
-                     );
-
-  httpsClient.print(httpText3);
-
-  Serial.println("HTTP request is: ");
-  Serial.println(httpText3);
-
-  Serial.println("request sent");
-
-  while (httpsClient.connected())
-  {
-    String line = httpsClient.readStringUntil('\n');
-    // Serial.println(line); //Print response
-    if (line == "\r")
+    Serial.print("HTTPS Connecting");
+    int rrr = 0; //retry counter
+    while ((!httpsClient.connect(host2, httpsPort)) && (rrr < 30))
     {
-      Serial.println("headers received");
-      break;
+      delay(100);
+      Serial.print(".");
+      rrr++;
     }
- 
-  }
- 
-  Serial.println("reply was:");
-  Serial.println("==========");
+    if (rrr == 30)
+    {
+      Serial.println("Connection failed");
+    }
+    else
+    {
+      Serial.println("Connected to web");
+    }
 
-  String linez3;
-  String lineT3;
+    Serial.print("requesting URL: ");
+    Serial.println(host2);
+
+    String httpBody3 =  (String("{\r\n") +
+                         "            celsius: "  + toffsetS
+                         + "\r\n" +
+                         "}"
+                        );
+    int httpBodyLength3 = httpBody3.length();
+
+    // Serial.print("httpBody3 Length: ");
+    // Serial.println(httpBodyLength3);
+
+    String httpText3 = (String("PUT /api/v2/devices/" + tdevice + "/temperatureOffset HTTP/1.1") + "\r\n" +
+                        "Host: my.tado.com" + "\r\n" +
+                        "Authorization: Bearer " + Ttoken + "\r\n" +
+                        "Accept: */*" + "\r\n" +
+                        "Cache-Control: no-cache" + "\r\n" +
+                        "Host: my.tado.com" + "\r\n" +
+                        "Content-Length: " + httpBodyLength3 + "\r\n" +
+                        "Connection: keep-alive\r\n\r\n" +
+                        httpBody3
+                       );
+
+    httpsClient.print(httpText3);
+
+    Serial.println("HTTP request is: ");
+    Serial.println(httpText3);
+
+    Serial.println("request sent");
+
+    while (httpsClient.connected())
+    {
+      String line = httpsClient.readStringUntil('\n');
+      // Serial.println(line); //Print response
+      if (line == "\r")
+      {
+        Serial.println("headers received");
+        break;
+      }
+
+    }
+
+    Serial.println("reply was:");
+    Serial.println("==========");
+
+    String linez3;
+    String lineT3;
 
     linez3 = httpsClient.readStringUntil('\n'); //Read Line by Line
     lineT3 = httpsClient.readStringUntil('\n'); //Read Line by Line
 
 
-// Serial.println("\r\n linez3");
-// Serial.println(linez3); 
-// Serial.println("\r\n");
+    // Serial.println("\r\n linez3");
+    // Serial.println(linez3);
+    // Serial.println("\r\n");
 
-Serial.println("\r\n lineT3");
-Serial.println(lineT3); 
-Serial.println("\r\n");
+    Serial.println("\r\n lineT3");
+    Serial.println(lineT3);
+    Serial.println("\r\n");
 
-
-//###################################################################################################################
+  }
+  //###################################################################################################################
   // Serial.println();
   Serial.println("==========");
   Serial.println("closing connection");
+  int delayTime = waitTime * 60000;
+  Serial.println("Waiting " + String(waitTime) + " minutes before next update is parsed.");
 
-  delay(300000); //POST Data at every 5 minute
+  delay(delayTime); //POST Data at every...
 }
 //=======================================================================
