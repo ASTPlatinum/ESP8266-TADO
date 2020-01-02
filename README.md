@@ -9,4 +9,7 @@ It's probably a bad idea to use many of these at once, as the effect of them try
 
 Inspired by https://community.tado.com/en-gb/discussion/2800/trvs-horribly-inaccurate-any-suggestions?
 
+Those pesky Tado TRV's are bloody inaccurate, Jon created this to try & counter that by introducing an external temperature sensor using an ESP8266 & DHT 22 temp sensor. 
+I've added to it as the temp sensors seem to pick up anything more than an flies fart and the temp changes, so i've delayed the update time and added an offset margin.
+
 Potentially even more buggy than Jon's version, but working. :s
